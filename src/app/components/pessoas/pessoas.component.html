@@ -1,0 +1,132 @@
+<div class="container p-5">
+
+    <div class="alert alert-success" role="alert" *ngIf="mostrarMsgSucesso">
+        Concluído com sucesso!
+      </div>
+ 
+    <div class="table-responsive">
+        <div class="input-group mb-3">
+            <button type="button" class="btn btn-primary" (click)="Criar(modalForm)">
+                Cadastrar Pessoa
+            </button>
+            <select class="form-select" (change)="FiltrarPorPfj($event)">
+              <option value="-1" selected>Listar todos</option>
+              <option value="0">Pessoa Física</option>
+              <option value="1">Pessoa Jurídica</option>                      
+            </select>
+          </div>
+
+        <table class="table table-bordered table-striped table-hover table-sm" *ngIf="pessoas">
+            <thead>
+                <tr>               
+                    <th>Cnpj/Cpf</th>
+                    <th>Nome</th>               
+                    <th>Classificacao</th>
+                    <th>Telefones</th>
+                    <th></th>
+                </tr>
+            </thead>
+    
+            <tbody>
+                <tr *ngFor="let pessoa of pessoas" >
+                    <td>{{pessoa.cnpjCpf | mask: '000.000.000-00||00.000.000/0000-00'}}</td>
+                    <td>{{pessoa.nome}}</td>
+                    <td>{{ObterDescricaoSituacao(pessoa.classificacao)}}</td>
+                    <td>
+                        <div *ngIf="pessoa.telefones !== null">
+                            <span *ngFor="let telefone of pessoa.telefones">{{telefone.numero | mask: '(00) 00000-0009'}}; </span>
+                        </div>                    
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-secondary mgr-5" (click)="Editar(pessoa.id, modalForm)">Editar</button>
+                        <button type="button" class="btn btn-sm btn-danger" (click)="AbrirModalConfirmaExcluir(pessoa.id, modalConfirmaDelete)">Excluir</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<ng-template #modalForm>
+    <div class="modal-header">
+      <h4 class="modal-title pull-left">Pessoa</h4>
+      <button type="button" class="close btn-close pull-right" aria-label="Close" (click)="modalRef?.hide()">
+        <span aria-hidden="true" class="visually-hidden">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-danger" role="alert" *ngIf="mostrarMsgErroModal" >
+            {{msgRetorno}}
+          </div>
+
+        <form [formGroup]="formulario" (ngSubmit)="EnviarFormulario()">
+            <div class="form-group">                  
+                <input type="hidden" formControlName="id">
+            </div>
+            <div class="form-group mgb-5">
+                <label>Tipo</label>
+                <select class="form-control" formControlName="pfj">
+                    <option value="0">Pessoa Física</option>
+                    <option value="1">Pessoa Jurídica</option>
+                </select>              
+            </div>
+            <div class="form-group mgb-5">
+                <label>Nome</label>
+                <input type="text" class="form-control" formControlName="nome" maxlength="100">
+            </div>
+            <div class="form-group mgb-5" >
+                <label>Razao</label>
+                <input type="text" class="form-control" formControlName="razao" maxlength="100">
+            </div> 
+            <div class="form-group mgb-5">
+                <label>{{this.formulario.controls.pfj.value === "0" ? 'Cpf' : 'Cnpj'}}</label>
+                <input type="text" class="form-control" formControlName="cnpjCpf" mask="000.000.000-00||00.000.000/0000-00">
+            </div>               
+            <div class="form-group mgb-5">
+                <label>Cep</label>
+                <input type="text" class="form-control" formControlName="cep" mask="00-000-000">
+            </div>
+            <div class="form-group mgb-5">
+                <label>Email</label>
+                <input type="email" class="form-control" formControlName="email">
+            </div>               
+            <div class="form-group mgb-5">
+                <label>Classificaçao</label>     
+                <select class="form-control" formControlName="classificacao">                        
+                    <option value="0">Inativo</option>
+                    <option value="1">Ativo</option>
+                    <option value="2">Preferencial</option>
+                </select>
+            </div>  
+
+            <hr>
+            <button type="button" class="btn btn-sm btn-success" (click)="addCampoTelefone()">Adicionar campo telefone</button>
+            <hr>  
+            <div formArrayName="telefones">
+                <div *ngFor="let t of telefones.controls; index as i">
+                    <div [formGroupName]="i">
+                        <div class="form-group mgb-5">
+                            <label>Telefone {{i+1}}</label>
+                            <input type="hidden" formControlName="id">
+                            <input type="text" class="form-control" formControlName="numero" mask="(00) 00000-0009">
+                        </div>
+                    </div>                   
+                  </div>
+            </div> 
+              
+
+            <div class="pt-3">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="button" class="btn btn-default" (click)="modalRef?.hide()">Cancelar</button>
+            </div>
+        </form>
+    </div>   
+  </ng-template>
+
+  <ng-template #modalConfirmaDelete>
+    <div class="modal-body text-center">
+      <p>Deseja excluir este registro?</p>
+      <button type="button" class="btn btn-primary" (click)="Excluir()">Sim</button>
+      <button type="button" class="btn btn-default" (click)="modalRef?.hide()">Não</button>
+    </div>
+  </ng-template>
